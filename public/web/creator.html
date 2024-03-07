@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, maximum-scale=0.9,user-scalable=0">
+    <title>Data Collector</title>
+    <link rel="stylesheet" href="styles.css">
+
+
+</head>
+<body>
+    <div id = "content">
+        <h1>Data creator</h1>
+        <div>
+            <input type="text" id="user" placeholder="Enter Your Name">
+            <span id="instructions"></span>
+            <button type="button" id="advanceBtn" onclick="start();">START</button>
+        </div>
+        <br>
+        <div id="sketchPadContainer" style="visibility:hidden;">
+
+        </div>
+    </div>
+
+    <!-- <script src="/node_modules/firebase/firebase-app.js"></script> -->
+    <!-- <script src="/node_modules/firebase/firebase-firestore.js"></script> -->
+
+    <script src="js/draw.js"></script>
+    <script src="js/sketchPad.js"></script>
+    <!-- <script type="module" src="js/fileHandler.js"></script> -->
+
+    <script>
+        import { initializeApp } from "firebase/app";
+        import { getFirestore } from "firebase/firestore";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYLZDEM1AfzSPYlgUBhn3V-OyujxQ2oIw",
+            authDomain: "drawer-ml.firebaseapp.com",
+            projectId: "drawer-ml",
+            storageBucket: "drawer-ml.appspot.com",
+            messagingSenderId: "1010028204648",
+            appId: "1:1010028204648:web:00ced3b87d82b72ed2e1dd"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        
+        // Get a Firestore reference
+        const db = firestore();
+        const colRef = db.collection("data");
+
+        function saveData(data) {
+            addDoc(colRef,data)
+                .then(() => {
+                    console.log("Saved Successfully");
+                })
+                .catch((error) => {
+                    console.error("Error saving data: ", error);
+                });
+        }
+    </script>
+    <script>
+
+        let index = 0;
+        const labels = ["car","fish","tree","pencil","clock","house","man"]
+
+        const data = {
+            user:null,
+            session: new Date().getTime(),
+            drawings:{}
+        };
+        const sketchPad = new SketchPad(sketchPadContainer);
+
+        function start(){
+            if(user.value==""){
+                alert("Please enter your name");
+                return;
+            }
+            data.user = user.value;
+            user.style.display = "none";
+            sketchPadContainer.style.visibility = "visible";
+
+            const label = labels[index];
+            instructions.innerHTML="Please draw a "+label;
+            advanceBtn.innerHTML="NEXT";
+            advanceBtn.onclick=next;
+            
+            function next(){
+                if (sketchPad.paths.length==0){
+                    alert("Please Draw something");
+                    return;
+                }
+                const label=labels[index];
+                data.drawings[label]=sketchPad.paths;
+                sketchPad.reset();
+                index++;
+
+                if (index<label.length){
+                    const nextlabel = labels[index];
+                    instructions.innerHTML="Please draw a "+nextlabel;
+                }else{
+                    sketchPadContainer.style.visibility = "hidden";
+                    instructions.innerHTML="THANK YOU!"
+                    advanceBtn.innerHTML="SAVE" 
+                    advanceBtn.onclick=save;    
+                }
+            }
+        }
+
+        function save(){
+            advanceBtn.style.display = "none";
+            saveData(data)
+            console.log(data)
+        }
+    </script>
+
+
+</body>
+</html>
